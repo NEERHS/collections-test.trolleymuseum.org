@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <title>Collections</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/tailwindcss.css">
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/myModal.css" />
+</head>
+<body>
+<script>
+
+/*
+ * Convert teXT cAsE to Title Case
+ */
+function titleCase(str) {
+  str = str.toLowerCase();
+  str = str.split(' ');
+  
+  for (var i = 0; i < str.length; i++) {
+    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1); 
+  }
+  
+  return str.join(' ');
+}
+
+
+/*
+ * Global variables used to store car data
+ */
+var collections = {};
+var cities = [];
+var states = [];
+var categories = [];
+
+
+$(document).ready(function(){
+
+  /*
+   * Load the car data.
+   */
+
+  // primary list of car data
+  $.getJSON('collections.json', function(data){
+    collections = data
+    console.log(collections);
+  }).fail(function(){
+    console.log("Unable to load collections.json");
+  });
+
+  // cities
+  $.getJSON('cities.json', function(data){
+    cities = data
+    console.log(cities);
+    cities.forEach(function(item){
+      document.getElementById("city").innerHTML += '<option value="'+item+'">'+item+'</option>';
+    });
+  }).fail(function(){
+    console.log("Unable to load cities.json");
+  });
+
+  // states
+  $.getJSON('states.json', function(data){
+    states = data
+    console.log(states);
+    states.forEach(function(item){
+      document.getElementById("state").innerHTML += '<option value="'+item+'">'+item+'</option>';
+    });
+  }).fail(function(){
+    console.log("Unable to load states.json");
+  });
+
+  // categories
+  $.getJSON('categories.json', function(data){
+    categories = data
+    console.log(categories);
+    categories.forEach(function(item){
+      document.getElementById("category").innerHTML += '<option value="'+item+'">'+item+'</option>';
+    });
+  }).fail(function(){
+    console.log("Unable to load categories.json");
+  });
+
+});
+
+
+
+/*
+ * Display Search Results
+ */
+function search_results_template(itms, search_attributes) {
+
+  console.log(itms);
+
+  const itms_len = itms.length;
+  var out = "";
+  out += `
+<div class="max-w-7xl mx-auto px-6 lg:px-8">
+  <h1 class="text-4xl font-bold mb-4 border-b">Search Results</h1>
+  <div class="grid grid-cols-2 mb-4">
+    <div id="results-found"><span id="results-found-count">${itms_len}</span> <span id="results-found-label">Results Found</span></div>
+    <div class="text-right"><a href="#" class="px-4 py-2 rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-300" onclick="window.location.reload();">Start a new Search</a></div>
+  </div>
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+`;
+
+  itms.forEach(function(itm){
+
+    var img_src = itm.img_src;
+    var img_attribute = itm.img_attribute;
+    var img_alt = itm.img_alt;
+    if (img_src == "") {
+      img_src = "image-not-available.jpg"
+    }
+    console.log("img_src:["+img_src+"]");
+
+    out += `
+      <!-- search result -->
+      <div class="bg-white shadow rounded-b-md">
+        <div class="bg-gray-100 relative">
+          <img src="/pix/${img_src}" alt="${img_alt}" style="cursor: pointer;" class="object-cover h-52 w-full" onclick="item_template(${itm.car_id});" />
+          <span class="inline-block shadow-sm rounded-tr-lg py-1 px-3 bg-yellow-400 text-gray-900 text-xs absolute z-40 bottom-0">${itm.category}</span>
+        </div>
+        <div class="text-center py-6">
+          <div>${itm.title}</div>
+          <div>${itm.description}</div>
+        </div>
+      </div>
+      <!-- search result END -->
+    `;
+
+  });
+
+
+
+out += `
+  </div>
+</div>
+
+<input type="hidden" id="car_title" name="car_title" value="${search_attributes['car_title']}" />
+<input type="hidden" id="car_number" name="car_number" value="${search_attributes['car_number']}" />
+<input type="hidden" id="car_description" name="car_description" value="${search_attributes['car_description']}" />
+<input type="hidden" id="car_history" name="car_history" value="${search_attributes['car_history']}" />
+<input type="hidden" id="city" name="city" value="${search_attributes['city']}" />
+<input type="hidden" id="state" name="state" value="${search_attributes['state']}" />
+<input type="hidden" id="category" name="category" value="${search_attributes['category']}" />
+    `;
+  document.getElementById("inner-container").innerHTML = out;
+}
+
+
+
+
+/*
+ * Display Car information
+ */
+function item_template(itm_id) {
+
+  var car_title = document.getElementById("car_title").value;
+  var car_number = document.getElementById("car_number").value;
+  var car_description = document.getElementById("car_description").value;
+  var car_history = document.getElementById("car_history").value;
+  var city = document.getElementById("city").value;
+  var state = document.getElementById("state").value;
+  var category = document.getElementById("category").value;
+
+  const search_attributes = {
+    "car_title": car_title,
+    "car_number": car_number,
+    "car_description": car_description,
+    "car_history": car_history,
+    "city": city,
+    "state": state,
+    "category": category
+  }
+
+  var itm = collections[itm_id];
+  console.log(itm);
+  var additional_images = "";
+  var technical_information = "";
+
+  if ('additional_images' in itm) {
+    itm.additional_images.forEach(function(itm){
+      var am_src = itm.img_src;
+      var am_alt = itm.img_alt;
+      var am_attr = itm.img_attribution;
+      additional_images += '<div class="additional-image">';
+      additional_images += '<img src="/pix/'+am_src+'" alt="'+am_alt+'" style="cursor: pointer;" class="border-8 border-white shadow-lg w-full" onclick="modalizeImage(this);" />';
+      additional_images += '<div class="text-center py-2 text-sm">'+am_attr+'</div>';
+      additional_images += '</div>';
+    });
+  } // if 'additional_images' in itm
+
+  for (let k of Object.keys(itm.technical_information)) {
+    var v = itm.technical_information[k];
+    if (typeof v == "object") {
+
+      technical_information += '<li class="mb-2"><h2 class="text-lg mt-8 font-bold">'+titleCase(k.replace(/_/g, " "))+':</h2><ul>';
+
+      for (let k2 of Object.keys(v)) {
+        var v2 = v[k2];
+        technical_information += '<li class="mb-2"><strong class="font-bold">'+titleCase(k2)+':</strong> '+v2+'</li>';
+      }
+
+      technical_information += '</ul></li>';
+
+    } else {
+      technical_information += '<li class="mb-2"><strong class="font-bold">'+titleCase(k)+':</strong> '+v+'</li>';
+    }
+  }
+
+
+  var img_src = itm.img_src;
+  var img_attribute = itm.img_attribute;
+  var img_alt = itm.img_alt;
+  if (img_src == "") {
+    img_src = "image-not-available.jpg"
+  }
+  console.log("img_src:["+img_src+"]");
+
+  var out = "";
+  out += `
+
+<div class="grid grid-cols-1 gap-6 md:grid-cols-5">
+  <div class="md:col-span-2">
+    <img src="/pix/${img_src}" alt="${img_alt}" style="cursor: pointer;" class="border-8 border-white shadow-lg w-full" onclick="modalizeImage(this);" />
+    <div class="text-center py-2 text-sm">${img_attribute}</div>
+
+    <div class="bg-gray-200 py-4 px-8 mt-4">
+      <dl>
+        <dt class="font-bold mt-4">Builder</dt>
+        <dd class="mb-4">${itm.builder}</dd>
+        <dt class="font-bold mt-4">Description</dt>
+        <dd class="mb-4">${itm.description}</dd>
+        <dt class="font-bold mt-4">Category</dt>
+        <dd class="mb-4">${itm.category}</dd>
+        <dt class="font-bold mt-4">Year</dt>
+        <dd class="mb-4">${itm.year}</dd>
+        <dt class="font-bold mt-4">Acquired by the Museum</dt>
+        <dd class="mb-4">${itm.acquired_by_the_museum}</dd>
+`;
+  if (itm.fund != "") {
+    out += `
+        <dt class="font-bold mt-4">Fund:</dt>
+        <dd class="mb-4">${itm.fund}</dd>
+        <div id="click-here-to-donate-to-fund" class="px-4 py-2 rounded-md bg-green-600 font-bold hover:bg-green-500" style="color:#ffff00; cursor: pointer; text-align:center;" onclick='window.open("https://trolleymuseum.org/support/donate/");'>Click Here to Donate to ${itm.title}</div>
+    `;
+  }
+out += `
+      </dl>
+    </div>
+  </div>
+  <div class="md:col-span-3">
+    <h1 class="text-4xl font-bold">${itm.title}</h1>
+
+    <div class="bg-gray-100 py-4 px-4 mt-4"><div class="text-right"><input id="search-submit-button" onclick="do_search();" type="button" value="Return to Search Results" class="px-4 py-2 rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-300" /></div></div>
+
+<input type="hidden" id="car_title" name="car_title" value="${search_attributes['car_title']}" />
+<input type="hidden" id="car_number" name="car_number" value="${search_attributes['car_number']}" />
+<input type="hidden" id="car_description" name="car_description" value="${search_attributes['car_description']}" />
+<input type="hidden" id="car_history" name="car_history" value="${search_attributes['car_history']}" />
+<input type="hidden" id="city" name="city" value="${search_attributes['city']}" />
+<input type="hidden" id="state" name="state" value="${search_attributes['state']}" />
+<input type="hidden" id="category" name="category" value="${search_attributes['category']}" />
+
+
+`;
+
+    if (itm.history != "") {
+      out += `
+      <h2 class="text-2xl font-bold mt-8 mb-4 border-b">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+        </svg>
+        History
+      </h2>
+      <div class="mb-2">${itm.history}</div>`;
+    }
+
+    if (technical_information != "") {
+      out += `
+      <h2 class="text-2xl font-bold mt-8 mb-4 border-b">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Technical Information
+      </h2>
+      <ul>
+        ${technical_information}
+      </ul>`;
+    }
+
+    if (additional_images != "") {
+      out += `
+      <h2 class="text-2xl font-bold mt-8 mb-4 border-b">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Additional Images
+      </h2>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        ${additional_images}
+      </div>`;
+    }
+
+  out += `
+    </div>
+  </div>
+    `;
+  document.getElementById("inner-container").innerHTML = out;
+}
+
+/*
+ * Search the database
+ */
+function do_search() {
+  var car_title = document.getElementById("car_title").value;
+  var car_number = document.getElementById("car_number").value;
+  var car_description = document.getElementById("car_description").value;
+  var car_history = document.getElementById("car_history").value;
+  var city = document.getElementById("city").value;
+  var state = document.getElementById("state").value;
+  var category = document.getElementById("category").value;
+
+  const search_attributes = {
+    "car_title": car_title,
+    "car_number": car_number,
+    "car_description": car_description,
+    "car_history": car_history,
+    "city": city,
+    "state": state,
+    "category": category
+  }
+
+  console.log("car_title:",car_title);
+  console.log("car_number:",car_number);
+  console.log("car_description:",car_description);
+  console.log("car_history:",car_history);
+  console.log("city:",city);
+  console.log("state:",state);
+  console.log("category:",category);
+
+  document.getElementById("inner-container").innerHTML = '<h1 id="browse-the-collection" class="text-4xl font-bold mb-4 border-b">Search Results</h1>';
+
+  let search_results = [];
+
+  for (let k of Object.keys(collections)) {
+
+    const obj = collections[k];
+
+    if (car_title != "") {
+      if ( obj.title.toLowerCase().includes(car_title.toLowerCase()) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // car_title
+    if (car_number != "") {
+      if ( obj.title.includes(car_number) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // car_number
+    if (car_description != "") {
+      if ( obj.description.toLowerCase().includes(car_description.toLowerCase()) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // car_description
+    if (car_history != "") {
+      if ( obj.history.toLowerCase().includes(car_history.toLowerCase()) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // car_history
+    if (city != "") {
+      if ( obj.source_city.toLowerCase().includes(city.toLowerCase()) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // city
+    if (state != "") {
+      if ( obj.source_state.toLowerCase().includes(state.toLowerCase()) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // state
+    if (category != "") {
+      if ( obj.category.toLowerCase().includes(category.toLowerCase()) ) {
+        if (! (search_results.includes(obj))) { search_results.push(obj); }
+      } // if
+    } // category
+
+  } // for
+
+  search_results_template(search_results, search_attributes);
+
+} // do_search
+
+</script>
+
+<div id="outer-container" class="font-sans text-gray-900 antialiased">
+  <div id="container" class="py-12">
+    <div id="inner-container" class="max-w-7xl mx-auto px-6 lg:px-8">
+      <h1 id="browse-the-collection" class="text-4xl font-bold mb-4 border-b">Browse the Collection</h1>
+      <p id="collection-description" class="mb-8">Collecting since 1939, there are over 250 vehicles in our collection of mass transit. Explore our database of vehicles and large artifacts or what we have in our library.</p>
+      <!-- form id="search-form" method="GET" action="collections.html" -->
+        <fieldset id="search-form-browse" class="mb-8">
+          <legend class="text-xl font-bold mb-4">Browse</legend>
+          <!-- title -->
+          <div id="search-by-car-title-container">
+            <label id="search-by-car-title-label" for="car_title" class="block font-medium">Search for text in the Car Name</label>
+            <input id="car_title" name="car_title" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+          </div>
+          <!-- number -->
+          <div id="search-by-car-number-container">
+            <label id="search-by-car-number-label" for="car_number" class="block font-medium">Search by Car Number</label>
+            <input id="car_number" name="car_number" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+          </div>
+          <!-- description -->
+          <div id="search-by-car-description-container">
+            <label id="search-by-car-description-label" for="car_description" class="block font-medium">Search for text in the Car Description</label>
+            <input id="car_description" name="car_description" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+          </div>
+          <!-- history -->
+          <div id="search-by-car-history-container">
+            <label id="search-by-car-history-label" for="car_history" class="block font-medium">Search for text in the Car History</label>
+            <input id="car_history" name="car_history" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+          </div>
+          <!-- city -->
+          <div id="search-by-city-container">
+            <label id="search-by-city-label" for="city" class="block font-medium">City</label>
+            <select name="city" id="city" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+              <option value="" selected>All Cities</option>
+            </select>
+          </div>
+          <!-- state -->
+          <div id="search-by-state-container">
+            <label id="search-by-state-label" for="state" class="block font-medium">State/Country</label>
+            <select name="state" id="state" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+              <option value="" selected>All States</option>
+            </select>
+          </div>
+          <!-- category -->
+          <div id="search-by-category-container">
+            <label id="search-by-category-label" for="category" class="block font-medium">Category</label>
+            <select name="category" id="category" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+              <option value="" selected>All Categories</option>
+            </select>
+          </div>
+        </fieldset>
+        <input id="search-submit-button" onclick="do_search();" type="button" value="Search" class="px-4 py-2 rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-300" />
+      <!-- /form -->
+    </div>
+  </div>
+  <div id="footer-copyright" class="max-w-7xl mx-auto px-6 lg:px-8 text-center text-xs py-4 border-t">
+  &copy; 1998 - 2022 New England Electric Railway Historical Society. All Rights Reserved.
+  </div>
+</div>
+
+<script>
+  /*
+   * Allow ENTER key on input fields
+   */
+  $( "input" ).keypress(function() {
+    var keycode = (event.keyCode ? event.keyCode : event.which);
+      if(keycode == '13'){
+        console.log('You pressed a "enter" key in input box');
+        do_search();
+      }
+  });
+</script>
+
+
+
+<div id="myModal" class="modal">
+  <span id="closeModal" style="cursor: pointer;" onclick="closeModal();">&times;</span>
+  <img class="modal-content" id="modalImg" style="cursor: pointer;" onclick="closeModal();" />
+  <div id="modalCaption"></div>
+</div>
+<script type="text/javascript" src="/js/myModal.js"></script>
+
+</body>
+</html>
