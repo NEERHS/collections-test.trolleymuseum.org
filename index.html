@@ -148,6 +148,7 @@ out += `
   </div>
 </div>
 
+<input type="hidden" id="car_text" name="car_text" value="${search_attributes['car_text']}" />
 <input type="hidden" id="car_title" name="car_title" value="${search_attributes['car_title']}" />
 <input type="hidden" id="car_number" name="car_number" value="${search_attributes['car_number']}" />
 <input type="hidden" id="car_description" name="car_description" value="${search_attributes['car_description']}" />
@@ -167,15 +168,17 @@ out += `
  */
 function item_template(itm_id) {
 
-  var car_title = document.getElementById("car_title").value;
-  var car_number = document.getElementById("car_number").value;
-  var car_description = document.getElementById("car_description").value;
-  var car_history = document.getElementById("car_history").value;
+  var car_text = document.getElementById("car_text").value;
+  var car_title = ""; // document.getElementById("car_title").value;
+  var car_number = ""; // document.getElementById("car_number").value;
+  var car_description = ""; // document.getElementById("car_description").value;
+  var car_history = ""; // document.getElementById("car_history").value;
   var city = document.getElementById("city").value;
   var state = document.getElementById("state").value;
   var category = document.getElementById("category").value;
 
   const search_attributes = {
+    "car_text": car_text,
     "car_title": car_title,
     "car_number": car_number,
     "car_description": car_description,
@@ -266,6 +269,7 @@ out += `
 
     <div class="bg-gray-100 py-4 px-4 mt-4"><div class="text-right"><input id="search-submit-button" onclick="do_search();" type="button" value="Return to Search Results" class="px-4 py-2 rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-300" /></div></div>
 
+<input type="hidden" id="car_text" name="car_text" value="${search_attributes['car_text']}" />
 <input type="hidden" id="car_title" name="car_title" value="${search_attributes['car_title']}" />
 <input type="hidden" id="car_number" name="car_number" value="${search_attributes['car_number']}" />
 <input type="hidden" id="car_description" name="car_description" value="${search_attributes['car_description']}" />
@@ -325,16 +329,21 @@ out += `
 /*
  * Search the database
  */
-function do_search() {
-  var car_title = document.getElementById("car_title").value;
-  var car_number = document.getElementById("car_number").value;
-  var car_description = document.getElementById("car_description").value;
-  var car_history = document.getElementById("car_history").value;
+function do_search(numberToShow="") {
+
+  var car_text = document.getElementById("car_text").value;
+  if (numberToShow == "all") { car_text="all"; }
+
+  var car_title = ""; //document.getElementById("car_title").value;
+  var car_number = ""; //document.getElementById("car_number").value;
+  var car_description = ""; //document.getElementById("car_description").value;
+  var car_history = ""; //document.getElementById("car_history").value;
   var city = document.getElementById("city").value;
   var state = document.getElementById("state").value;
   var category = document.getElementById("category").value;
 
   const search_attributes = {
+    "car_text": car_text,
     "car_title": car_title,
     "car_number": car_number,
     "car_description": car_description,
@@ -344,6 +353,7 @@ function do_search() {
     "category": category
   }
 
+  console.log("car_text:",car_text);
   console.log("car_title:",car_title);
   console.log("car_number:",car_number);
   console.log("car_description:",car_description);
@@ -360,41 +370,54 @@ function do_search() {
 
     const obj = collections[k];
 
-    if (car_title != "") {
-      if ( obj.title.toLowerCase().includes(car_title.toLowerCase()) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // car_title
-    if (car_number != "") {
-      if ( obj.title.includes(car_number) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // car_number
-    if (car_description != "") {
-      if ( obj.description.toLowerCase().includes(car_description.toLowerCase()) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // car_description
-    if (car_history != "") {
-      if ( obj.history.toLowerCase().includes(car_history.toLowerCase()) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // car_history
-    if (city != "") {
-      if ( obj.source_city.toLowerCase().includes(city.toLowerCase()) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // city
-    if (state != "") {
-      if ( obj.source_state.toLowerCase().includes(state.toLowerCase()) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // state
-    if (category != "") {
-      if ( obj.category.toLowerCase().includes(category.toLowerCase()) ) {
-        if (! (search_results.includes(obj))) { search_results.push(obj); }
-      } // if
-    } // category
+    if (car_text != "") {
+      car_title = car_text;
+      car_number = car_text;
+      car_description = car_text;
+      car_history = car_text;
+    } // car_text
+
+    if (car_text == "all") {
+      search_results.push(obj);
+    } else {
+
+      if (car_title != "") {
+        if ( obj.title.toLowerCase().includes(car_title.toLowerCase()) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // car_title
+      if (car_number != "") {
+        if ( obj.title.includes(car_number) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // car_number
+      if (car_description != "") {
+        if ( obj.description.toLowerCase().includes(car_description.toLowerCase()) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // car_description
+      if (car_history != "") {
+        if ( obj.history.toLowerCase().includes(car_history.toLowerCase()) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // car_history
+      if (city != "") {
+        if ( obj.source_city.toLowerCase().includes(city.toLowerCase()) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // city
+      if (state != "") {
+        if ( obj.source_state.toLowerCase().includes(state.toLowerCase()) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // state
+      if (category != "") {
+        if ( obj.category.toLowerCase().includes(category.toLowerCase()) ) {
+          if (! (search_results.includes(obj))) { search_results.push(obj); }
+        } // if
+      } // category
+
+    } // car_text == all
 
   } // for
 
@@ -407,32 +430,38 @@ function do_search() {
 <div id="outer-container" class="font-sans text-gray-900 antialiased">
   <div id="container" class="py-12">
     <div id="inner-container" class="max-w-7xl mx-auto px-6 lg:px-8">
-      <h1 id="browse-the-collection" class="text-4xl font-bold mb-4 border-b">Browse the Collection</h1>
+      <h1 id="browse-the-collection" class="text-4xl font-bold mb-4 border-b">Search the Collection</h1>
       <p id="collection-description" class="mb-8">Collecting since 1939, there are over 250 vehicles in our collection of mass transit. Explore our database of vehicles and large artifacts or what we have in our library.</p>
       <!-- form id="search-form" method="GET" action="collections.html" -->
         <fieldset id="search-form-browse" class="mb-8">
-          <legend class="text-xl font-bold mb-4">Browse</legend>
-          <!-- title -->
+          <!-- legend class="text-xl font-bold mb-4">Search</legend -->
+
+          <div id="search-by-car-text">
+            <label id="search-by-car-text-label" for="car_text" class="block font-medium">Search for text in the Car Number, Name, Description, and History</label>
+            <input id="car_text" name="car_text" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
+          </div>
+
+          <!-- title --><!--
           <div id="search-by-car-title-container">
             <label id="search-by-car-title-label" for="car_title" class="block font-medium">Search for text in the Car Name</label>
             <input id="car_title" name="car_title" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
           </div>
-          <!-- number -->
+          --><!-- number --><!--
           <div id="search-by-car-number-container">
             <label id="search-by-car-number-label" for="car_number" class="block font-medium">Search by Car Number</label>
             <input id="car_number" name="car_number" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
           </div>
-          <!-- description -->
+          --><!-- description --><!--
           <div id="search-by-car-description-container">
             <label id="search-by-car-description-label" for="car_description" class="block font-medium">Search for text in the Car Description</label>
             <input id="car_description" name="car_description" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
           </div>
-          <!-- history -->
+          --><!-- history --><!--
           <div id="search-by-car-history-container">
             <label id="search-by-car-history-label" for="car_history" class="block font-medium">Search for text in the Car History</label>
             <input id="car_history" name="car_history" type="text" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
           </div>
-          <!-- city -->
+          --><!-- city -->
           <div id="search-by-city-container">
             <label id="search-by-city-label" for="city" class="block font-medium">City</label>
             <select name="city" id="city" class="block mt-1 mb-4 w-full focus:border-yellow-400 focus:ring-yellow-400">
@@ -455,6 +484,7 @@ function do_search() {
           </div>
         </fieldset>
         <input id="search-submit-button" onclick="do_search();" type="button" value="Search" class="px-4 py-2 rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-300" />
+        <input id="search-all-submit-button" onclick="do_search('all');" type="button" value="Show All" class="px-4 py-2 rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-300" />
       <!-- /form -->
     </div>
   </div>
