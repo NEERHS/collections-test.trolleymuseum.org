@@ -9,7 +9,8 @@ aws \
   --exclude 'LICENSE' \
   --exclude 'make_indexes.py' \
   --exclude 'cars_without_images.py' \
-  --exclude '.DS_Store'
+  --exclude '.DS_Store' \
+  --exclude 'deploy.sh'
 
 aws \
   cloudfront create-invalidation \
